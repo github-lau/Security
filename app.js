@@ -1,11 +1,16 @@
 //jshint esversion:6
 
-//--- L1 Security Setup ---//
-// L1 security setup includes basic login/register authentication
+//--- L2 Security Setup ---//
+// L2 security setup includes database encryption
+// additional npm package to install: dotenv, mongoose-encryption.
+// before requiring all packages, need to setup dotenv first:
+require('dotenv').config(); // ensure the .env file is already created!
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose');
+const encrypt = require("mongoose-encryption");
 
 const app = express();
 
@@ -23,10 +28,13 @@ mongoose.connect("mongodb://localhost:27017/userDB1", {
 });
 
 // setting up mongoose schema
-const userSchema = {
+const userSchema = new mongoose.Schema({
   email: String,
   password: String
-};
+});
+
+const secret = "Thisisourlittlesecret.";
+userSchema.plugin(encrypt, {secret: process.env.SECRET, encryptedFields: ["password"]});
 
 const User = new mongoose.model("User", userSchema);
 
@@ -69,6 +77,8 @@ app.post('/login', function(req, res){
       if (foundUser) {
         if (foundUser.password === password){
           res.render('secrets');
+        } else {
+          res.redirect('/');
         }
       }
     }
